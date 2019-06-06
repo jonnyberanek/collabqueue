@@ -10,12 +10,12 @@ import React, { Component } from "react";
 import { Platform, StyleSheet, Text, View, Button, Modal, FlatList } from "react-native";
 import { createStackNavigator, createAppContainer } from "react-navigation";
 
-// import { HomeScreen, HostDashboardScreen } from "./components/screens/"
-import HomeScreen from "./components/screens/HomeScreen"
-import HostDashboardScreen from "./components/screens/HostDashboardScreen"
-import GuestJoinScreen from "./components/screens/GuestJoinScreen"
-import GuestDashboardScreen from "./components/screens/GuestDashboardScreen"
-import SongInfoListItem from "./components/views/SongInfoListItem";
+
+import HomeScreen from "screens/HomeScreen"
+import HostDashboardScreen from "screens/HostDashboardScreen"
+import GuestJoinScreen from "screens/GuestJoinScreen"
+import GuestDashboardScreen from "screens/GuestDashboardScreen"
+import SongInfoListItem from "views/SongInfoListItem";
 
 
 const instructions = Platform.select({
@@ -34,8 +34,6 @@ const MainNavigator = createStackNavigator({
 });
 
 const App = createAppContainer(MainNavigator);
-
-//const App = <HomeScreen/>;
 
 export default App;
 

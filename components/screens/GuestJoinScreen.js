@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 
 import { View, Text, TextInput, Button } from 'react-native'
 
-import Screen from '../abstracts/Screen'
+import Screen from 'components/abstracts/Screen'
 
 const styles = {
   screen: {
