@@ -2,6 +2,9 @@
 # Created by https://www.gitignore.io/api/reactnative
 # Edit at https://www.gitignore.io/?templates=reactnative
 
+# IGNORE FILE WITH FIREBASE INFO IN IT
+firebase-info.js
+
 ### ReactNative ###
 # React Native Stack Base
 

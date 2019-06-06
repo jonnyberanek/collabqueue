@@ -17,6 +17,10 @@ import GuestJoinScreen from "screens/GuestJoinScreen"
 import GuestDashboardScreen from "screens/GuestDashboardScreen"
 import SongInfoListItem from "views/SongInfoListItem";
 
+import * as firebase from "firebase/app";
+
+firebase.initializeApp(require("./firebase-info.js"))
+
 
 const instructions = Platform.select({
   ios: "Press Cmd+R to reload,\n" + "Cmd+D or shake for dev menu",
