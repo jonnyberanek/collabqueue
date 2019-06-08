@@ -5,6 +5,8 @@ import { View, Button } from 'react-native'
 
 import Screen from 'components/abstracts/Screen'
 
+import Spotify from "groupdj/controllers/Spotify"
+
 import * as firebase from "firebase/app";
 import "firebase/firestore";
 
@@ -20,12 +22,25 @@ const styles = {
   }
 }
 
+var s = new Spotify("a498abe489094bad89a2acf08d36b299", "user-read-private user-read-email", "https://us-central1-collabqueue.cloudfunctions.net/spotifyCallback");
+var r = s.request('GET', 'https://api.spotify.com/v1/search', { q: "cowboy", type:'track'})
+r.then((x) => {
+  console.log(x);
+}).catch((e) => {
+  console.error(e);
+})
+
 
 
 class HomeScreen extends Screen {
   static navigationOptions = {
     title: "Welcome"
   };
+
+  constructor(props){
+    super(props)
+
+  }
 
   _createParty = async () => {
     const db = firebase.firestore();
@@ -65,6 +80,7 @@ class HomeScreen extends Screen {
     const { navigate } = this.props.navigation;
     return (
       <View style = {styles.screen}>
+
         <Button
           title="Start a Party!"
           onPress={this._createParty}
@@ -77,6 +93,9 @@ class HomeScreen extends Screen {
 
     </View>
     );
+    // return(
+    //   <SpotifyWebView />
+    // )
   }
 }
 
