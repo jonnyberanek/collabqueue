@@ -31,7 +31,7 @@ class SpotifyUnsucessfulResponseError extends SpotifyError{
 
 // Main class of package
 // Manages access token and flexibly handles all api requests
-class Spotify {
+class SpotifyWebApi {
   // straightforward constructor
   constructor(clientId, scope, redirect){
     this.clientId = clientId
@@ -137,4 +137,4 @@ class Spotify {
 
 }
 
-export default Spotify;
+export default SpotifyWebApi;
