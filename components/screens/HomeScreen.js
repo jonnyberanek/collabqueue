@@ -5,32 +5,22 @@ import { View, Button } from 'react-native'
 
 import Screen from 'components/abstracts/Screen'
 
-import Spotify from "groupdj/controllers/Spotify"
+import SpotifyApiCaller from "groupdj/controllers/SpotifyApiCaller"
 
 import * as firebase from "firebase/app";
 import "firebase/firestore";
 
 const styles = {
   screen: {
-      flex: 1,
-      flexDirection: 'column',
-      justifyContent: 'space-evenly',
-      alignItems: 'center'
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'space-evenly',
+    alignItems: 'center'
   },
   buttons: {
 
   }
 }
-
-var s = new Spotify("a498abe489094bad89a2acf08d36b299", "user-read-private user-read-email", "https://us-central1-collabqueue.cloudfunctions.net/spotifyCallback");
-var r = s.request('GET', 'search', { q: "cowboy", type:'track'})
-r.then((x) => {
-  console.log(x);
-}).catch((e) => {
-  console.error(e);
-})
-
-
 
 class HomeScreen extends Screen {
   static navigationOptions = {
@@ -39,7 +29,8 @@ class HomeScreen extends Screen {
 
   constructor(props){
     super(props)
-
+    var spotify = new SpotifyApiCaller();
+    spotify.showMe().then((r) => {console.log(r);})
   }
 
   _createParty = async () => {

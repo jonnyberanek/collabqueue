@@ -1,25 +1,17 @@
-import React, {Component} from 'react'
-
-import { WebView } from 'react-native'
+// for connecting to and querying Spotify Web API
 
 import qs from 'querystring'
 import url from 'url'
 import { Buffer } from 'buffer'
+import {v4 as uuid} from 'uuid'
 
-const generateRandomString = function(length) {
-  var text = '';
-  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-  for (var i = 0; i < length; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
-};
-
+// Errors types for web api
+// coincide with error schema located at: https://developer.spotify.com/documentation/web-api/#response-schema
 class SpotifyError extends Error{
   // abstract parent
 }
-
+// 'Authentication Error' when requesting token
 class SpotifyAuthenticationError extends SpotifyError{
   constructor(body="Undefined error", ...args){
     super(...args)
@@ -27,7 +19,7 @@ class SpotifyAuthenticationError extends SpotifyError{
     this.message = typeof body === 'string' ? body : (`${body.error}: ${body.error_description}`)
   }
 }
-
+// 'Regular Error' when querying API
 class SpotifyUnsucessfulResponseError extends SpotifyError{
   constructor(body="Undefined error", ...args){
     super(...args)
@@ -36,8 +28,11 @@ class SpotifyUnsucessfulResponseError extends SpotifyError{
   }
 }
 
-class Spotify {
 
+// Main class of package
+// Manages access token and flexibly handles all api requests
+class Spotify {
+  // straightforward constructor
   constructor(clientId, scope, redirect){
     this.clientId = clientId
     this.scope = scope
@@ -110,7 +105,7 @@ class Spotify {
       client_id: this.clientId,
       scope: this.scope,
       redirect_uri: this.redirect,
-      state: generateRandomString(16)
+      state: uuid()
     })
 
     // create and open token request

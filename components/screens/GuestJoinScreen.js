@@ -5,6 +5,8 @@ import { View, Text, TextInput, Button } from 'react-native'
 
 import Screen from 'components/abstracts/Screen'
 
+import SpotifyApiCaller from "groupdj/controllers/SpotifyApiCaller"
+
 import * as firebase from "firebase/app";
 import "firebase/firestore";
 
@@ -17,6 +19,8 @@ const styles = {
   }
 }
 
+
+
 class GuestJoinScreen extends Screen {
   state={}
   static navigationOptions = {
@@ -25,6 +29,8 @@ class GuestJoinScreen extends Screen {
 
   constructor(props){
     super(props)
+    var spotify = new SpotifyApiCaller();
+    spotify.searchTrack("cowboy").then((r) => {console.log(r);})
     this.db = firebase.firestore();
   }
 
@@ -32,7 +38,7 @@ class GuestJoinScreen extends Screen {
     const code = this.state.partyCode.toLowerCase();
     const docs = await this.db.collection('parties').where('code', '==', code).get()
     if(!docs.empty){
-      this.props.navigation.navigate("HostDashboard", {code}) 
+      this.props.navigation.navigate("HostDashboard", {code})
     }
 
 
