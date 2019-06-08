@@ -6,14 +6,6 @@ import qs from 'querystring'
 import url from 'url'
 import { Buffer } from 'buffer'
 
-
-const clientId = "a498abe489094bad89a2acf08d36b299";
-const clientSecret = "d4373a6d49194db2a9f1516bda8c495b";
-const redirectUrl = "http://localhost/";
-
-const scopes = "user-read-private user-read-email"
-
-
 const generateRandomString = function(length) {
   var text = '';
   var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -23,99 +15,6 @@ const generateRandomString = function(length) {
   }
   return text;
 };
-
-
-const firstQuery = qs.stringify({
-  response_type: 'code',
-  client_id: clientId,
-  scope: scopes,
-  redirect_uri: redirectUrl,
-  state: generateRandomString()
-})
-
-
-
-class SpotifyWebView extends Component {
-  state = {
-    source: {
-      uri: "https://accounts.spotify.com/authorize?" + firstQuery
-    }
-  }
-
-  constructor(props){
-    super(props)
-    // var authorize = new XMLHttpRequest();
-    // authorize.onreadystatechange = () => {
-    //   if(authorize.readyState == XMLHttpRequest.DONE) {
-    //     console.log(authorize);
-    //   }
-    // }
-    // authorize.open('GET', "https://accounts.spotify.com/authorize?" + firstQuery)
-    // authorize.send()
-  }
-
-  render(){
-    return (
-      <WebView
-        ref={(r) => { this._webview = r }}
-        source={this.state.source}
-        onLoadStart={(ev) => {
-          console.log(this._webview);
-          const chunks = ev.nativeEvent.url.split("?")
-          console.log(chunks);
-          if(chunks[0] == redirectUrl){
-            query = qs.parse(chunks[1])
-            if(query.error){
-              // TODO: notify of error
-            }
-            else{
-              if(query.code){
-                console.log(query.code);
-                var tokReq = new XMLHttpRequest();
-                tokReq.onreadystatechange = () => {
-                  if(tokReq.readyState == XMLHttpRequest.DONE) {
-                    console.log(tokReq.response);
-                    var json = JSON.parse(tokReq.response);
-                  }
-                }
-                tokReq.onerror = (error) => {
-                  console.error(error);
-                }
-                tokReq.open("POST", "https://accounts.spotify.com/api/token")
-                //tokReq.setRequestHeader('Authorization', 'Basic ' + (new Buffer(clientId + ':' + clientSecret).toString('base64')))
-                tokReq.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
-                tokReq.setRequestHeader('Accept', 'application/json')
-                tokReq.send(qs.stringify({
-                  client_id: clientId,
-                  client_secret: clientSecret,
-                  code: query.code,
-                  grant_type: "authorization_code",
-                  redirect_uri: redirectUrl,
-                }))
-
-                // this.setState({
-                //   source: {
-                //     uri: "https://accounts.spotify.com/api/token",
-                //     method: "POST",
-                //     body: qs.encode({
-                //       client_id: clientId,
-                //       client_secret: clientSecret,
-                //       grant_type: "authorization_code",
-                //       code: query.code,
-                //       redirect_uri: redirectUrl
-                //     }),
-                //   }
-                // })
-              }
-            }
-
-          }
-
-        }}
-      />
-    )
-  }
-}
 
 class SpotifyError extends Error{
   // abstract parent
@@ -138,6 +37,7 @@ class SpotifyUnsucessfulResponseError extends SpotifyError{
 }
 
 class Spotify {
+
   constructor(clientId, scope, redirect){
     this.clientId = clientId
     this.scope = scope
@@ -145,6 +45,8 @@ class Spotify {
     this.accessToken
   }
 
+  // common need for multiple methods
+  // generates a basic promise with references to its res and rej
   _generatePromise(){
     var resolve, reject
     var promise = new Promise((res, rej) => {
@@ -154,21 +56,29 @@ class Spotify {
     return { promise, resolve, reject }
   }
 
-  async request(method, endpoint, params){
+  // run request at given endpoint with given data
+  //   all current Spotify api endpoints use v1,
+  //   but to ensure future compatability, optional apiversion arg is included
+  async request(method, endpoint, params, apiversion='v1'){
+
     //if accessToken does not exists or has timed out, get a new one
     // TODO: get a new access token on timeout
     if(!this.accessToken){
       try {
-        await this.getAccessToken()
+        await this.generateAccessToken()
       } catch (e) {
         console.log(e);
       }
     }
 
+    // generate promise to return and parts
     const { promise, resolve, reject } = this._generatePromise()
 
+    // create and open request based on given args
     const request = new XMLHttpRequest();
-    request.open(method, endpoint + "?" + qs.encode(params));
+    request.open(method, `https://api.spotify.com/${apiversion}/${endpoint}?${qs.encode(params)}`);
+
+    // on request finish, if there is an error, throw, else return data
     request.onreadystatechange = () => {
       if(request.readyState == XMLHttpRequest.DONE){
         const data = JSON.parse(request.response)
@@ -179,13 +89,16 @@ class Spotify {
         resolve(data)
       }
     }
-    request.onerror = reject
+
+    // supply authorizatin with access token and send request
     request.setRequestHeader("Authorization", "Bearer " + this.accessToken)
     request.send()
+
     return promise;
   }
 
-  async getAccessToken(){
+
+  async generateAccessToken(){
 
     // generate promise to return and parts
     const { promise, resolve, reject } = this._generatePromise()
@@ -197,11 +110,8 @@ class Spotify {
       client_id: this.clientId,
       scope: this.scope,
       redirect_uri: this.redirect,
-      state: '123132abcabc1234'
+      state: generateRandomString(16)
     })
-
-    console.log(query);
-
 
     // create and open token request
     const authorize = new XMLHttpRequest();
@@ -211,18 +121,16 @@ class Spotify {
     // TODO: take care of error case
     authorize.onreadystatechange = () => {
       if(authorize.readyState == XMLHttpRequest.DONE) {
-
-        if(authorize.responseURL.indexOf('#') != 0){
+        // if there is a hash fragment then the acces_token has been supplied - resolve promise
+        if(authorize.responseURL.indexOf('#') != -1){
           var hash = qs.decode(authorize.responseURL.split("#")[1])
           this.accessToken = hash.access_token
           resolve()
           return
         }
-        var error = SpotifyError()
-        if(authorize.responseURL.indexOf('?')){
-            error = SpotifyAuthenticationError(qs.decode(authorize.responseURL.split('?')[1]))
-        }
-        reject(error)
+        // else there was an error - reject promise
+        throw new SpotifyAuthenticationError(authorize.reponseText)
+        reject(new SpotifyAuthenticationError(authorize.reponseText))
       }
     }
 
